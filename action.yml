@@ -2,8 +2,8 @@
 name: Generate Deployment Matrix
 description: |
   Generates a deployment matrix based on changed files (using a pre-defined filter). For each
-  matched path it will try to lookup the environment, or default to the provided default
-  environment.
+  matched path it will try to lookup the key, or default to the provided default
+  key.
 inputs:
   filter-file:
     description: Path to the filter file
@@ -11,13 +11,17 @@ inputs:
   changes-override:
     description: Override the changes filter and provide your own set of paths (comma separated)
     required: false
-  default-environment:
-    description: Default environment (fallback value if no env. is provided for a path)
+  default-key:
+    description: Default key (fallback value if no key is provided for a path)
     required: false
     default: Default
+  output-key-name:
+    description: Name for the output key (defaults to `environment`)
+    required: false
+    default: environment
 outputs:
   matrix:
-    description: List of combinations of paths & environments
+    description: List of combinations of paths & keys
     value: ${{ steps.matrix-generator.outputs.matrix }}
 
 runs:
@@ -47,8 +51,8 @@ runs:
         CHANGED_PATHS='${{ steps.custom.outputs.changes || steps.filtered.outputs.changes }}'
 
         # Convert our filters file into a lookup map, so we can map a path to
-        # an environment. Then map each change entry to it's corresponding
-        # environment and create the necessary matrix array structure
+        # a key. Then map each change entry to it's corresponding key and
+        # create the necessary matrix array structure
         echo "matrix=`yq ea -o json '
           select(fileIndex == 1) as $filters |
           $filters |= keys |
@@ -57,9 +61,9 @@ runs:
 
           select(fileIndex == 0) |
           map(. |
-            capture("(?:(?<environment>\\w+)\\|)?(?<path>[\\w\\-_\\/]+)") |
+            capture("(?:(?<key>\\w+)\\|)?(?<path>[\\w\\-_\\/]+)") |
             {
-              "environment": .environment // "${{ inputs.default-environment }}",
+              "${{ inputs.output-key-name }}": .key // "${{ inputs.default-key }}",
               "path": .path
             })
           ' <(echo $CHANGED_PATHS) ${{ inputs.filter-file }} | jq -c`" >> "$GITHUB_OUTPUT"

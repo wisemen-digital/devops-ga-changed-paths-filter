@@ -27,10 +27,14 @@ inputs:
   changes-override:
     description: Override the changes filter and provide your own set of paths (comma separated)
     required: false
-  default-environment:
-    description: Default environment (fallback value if no env. is provided for a path)
+  default-key:
+    description: Default key (fallback value if no key is provided for a path)
     required: false
     default: Default
+  output-key-name:
+    description: Name for the output key (defaults to `environment`)
+    required: false
+    default: environment
 ```
 
 ## Output
@@ -38,7 +42,7 @@ inputs:
 ```yaml
 outputs:
   matrix:
-    description: List of combinations of paths & environments
+    description: List of combinations of paths & keys
 ```
 
 ## Usage
