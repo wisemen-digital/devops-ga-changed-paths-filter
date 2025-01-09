@@ -63,7 +63,7 @@ runs:
           map(. |
             capture("(?:(?<key>[\\w\\-_]+)\\|)?(?<path>[\\w\\-_\\/]+)") |
             {
-              "${{ inputs.output-key-name }}": .key // "${{ inputs.default-key }}",
+              "${{ inputs.output-key-name }}": .key // $filters[.path] // "${{ inputs.default-key }}",
               "path": .path
             })
           ' <(echo $CHANGED_PATHS) ${{ inputs.filter-file }} | jq -c`" >> "$GITHUB_OUTPUT"
