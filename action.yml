@@ -56,12 +56,12 @@ runs:
         echo "matrix=`yq ea -o json '
           select(fileIndex == 1) as $filters |
           $filters |= keys |
-          $filters |= map(. | capture("(?:(?<value>[\\w-_]+)\\|)?(?<key>[\\w\\-_\\/]+)")) |
+          $filters |= map(. | capture("(?:(?<value>[\\w\\-_]+)\\|)?(?<key>[\\w\\-_\\/]+)")) |
           $filters |= from_entries |
 
           select(fileIndex == 0) |
           map(. |
-            capture("(?:(?<key>[\\w-_]+)\\|)?(?<path>[\\w\\-_\\/]+)") |
+            capture("(?:(?<key>[\\w\\-_]+)\\|)?(?<path>[\\w\\-_\\/]+)") |
             {
               "${{ inputs.output-key-name }}": .key // "${{ inputs.default-key }}",
               "path": .path
