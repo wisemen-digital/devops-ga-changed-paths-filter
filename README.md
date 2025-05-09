@@ -25,7 +25,9 @@ inputs:
     description: Path to the filter file
     required: true
   changes-override:
-    description: Override the changes filter and provide your own set of paths (comma separated)
+    description: |
+      Override the changes filter and provide your own set of paths (comma separated). If you
+      provide the magic value `_all_`, it'll use all the paths from the filter file.
     required: false
   default-key:
     description: Default key (fallback value if no key is provided for a path)
