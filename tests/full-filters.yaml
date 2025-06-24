@@ -1,0 +1,34 @@
+---
+# Filters used for triggering k8s deployments
+
+k8s/network:
+  - 'k8s/network/**'
+Sandbox|k8s/network:
+  - 'k8s/network/**'
+Production|k8s/network:
+  - 'k8s/network/**'
+
+# Environments (change in `base` will deploy everywhere)
+Development|k8s/environments/development:
+  - 'k8s/environments/development/**'
+  - 'k8s/base/**'
+QA|k8s/environments/qa:
+  - 'k8s/environments/qa/**'
+  - 'k8s/base/**'
+Staging|k8s/environments/staging:
+  - 'k8s/environments/staging/**'
+  - 'k8s/base/**'
+Sandbox|k8s/environments/sandbox:
+  - 'k8s/environments/sandbox/**'
+  - 'k8s/base/**'
+Production|k8s/environments/production:
+  - 'k8s/environments/production/**'
+  - 'k8s/base/**'
+
+# Shared services
+k8s/shared/signoz-otel-collector:
+  - 'k8s/shared/signoz-otel-collector/**'
+Sandbox|k8s/shared/signoz-otel-collector:
+  - 'k8s/shared/signoz-otel-collector/**'
+Production|k8s/shared/signoz-otel-collector:
+  - 'k8s/shared/signoz-otel-collector/**'
