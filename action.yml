@@ -31,49 +31,41 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Simplify filter file
+      shell: bash
+      run: |
+        ${{ github.action_path }}/scripts/simplify-filter-file.sh \
+          ${{ inputs.filter-file }} \
+          /tmp/simple-path-filters.yaml
     # Collect changed paths
     - name: Collect changes
       if: "${{ inputs.changes-override == '' }}"
       id: filtered
       uses: dorny/paths-filter@v3
       with:
-        filters: ${{ inputs.filter-file }}
+        filters: /tmp/simple-path-filters.yaml
     - name: Collect changes
       if: "${{ inputs.changes-override == '_all_' }}"
       id: all
       shell: bash
       run: |
-        echo "changes=`yq -o json '
-          keys |
-          map(. | sub("[\\w\\-_]*\\|", ""))
-          ' ${{ inputs.filter-file }} | jq -c`" >> "$GITHUB_OUTPUT"
+        echo "changes=`${{ github.action_path }}/scripts/generate-all-keys.sh \
+          /tmp/simple-path-filters.yaml`" >> "$GITHUB_OUTPUT"
     - name: Collect changes
       id: custom
       shell: bash
       run: |
-        echo "changes=`echo '${{ inputs.changes-override }}' | \
-          jq 'split(",")' -Rc`" >> "$GITHUB_OUTPUT"
+        echo "changes=`${{ github.action_path }}/scripts/process-manual-keys.sh \
+          '${{ inputs.changes-override }}'`" >> "$GITHUB_OUTPUT"
     # Post process into actual matrix
     - name: Generate Matrix
       id: matrix-generator
       shell: bash
       run: |
         CHANGED_PATHS='${{ steps.filtered.outputs.changes || steps.all.outputs.changes || steps.custom.outputs.changes }}'
-
-        # Convert our filters file into a lookup map, so we can map a path to
-        # a key. Then map each change entry to it's corresponding key and
-        # create the necessary matrix array structure
-        echo "matrix=`yq ea -o json '
-          select(fileIndex == 1) as $filters |
-          $filters |= keys |
-          $filters |= map(. | capture("(?:(?<value>[\\w\\-_]+)\\|)?(?<key>[\\w\\-_\\/\\.]+)")) |
-          $filters |= from_entries |
-
-          select(fileIndex == 0) |
-          map(. |
-            capture("(?:(?<key>[\\w\\-_]+)\\|)?(?<path>[\\w\\-_\\/\\.]+)") |
-            {
-              "${{ inputs.output-key-name }}": .key // $filters[.path] // "${{ inputs.default-key }}",
-              "path": .path
-            })
-          ' <(echo $CHANGED_PATHS) ${{ inputs.filter-file }} | jq -c`" >> "$GITHUB_OUTPUT"
+        echo "matrix=`${{ github.action_path }}/scripts/generate-matrix.sh \
+          <(echo $CHANGED_PATHS) \
+          ${{ inputs.filter-file }} \
+          ${{ inputs.output-key-name }} \
+          ${{ inputs.default-key }}
+          `" >> "$GITHUB_OUTPUT"
