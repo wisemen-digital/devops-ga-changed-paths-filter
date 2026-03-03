@@ -9,6 +9,6 @@ if ! [ -x "$(command -v jq)" ]; then
   exit 1
 fi
 if ! [ -x "$(command -v yq)" ]; then
-  echo >&2 'Error: jq is not installed.'
+  echo >&2 'Error: yq is not installed.'
   exit 1
 fi
