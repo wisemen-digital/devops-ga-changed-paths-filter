@@ -41,7 +41,7 @@ runs:
     - name: Collect changes
       if: "${{ inputs.changes-override == '' }}"
       id: filtered
-      uses: dorny/paths-filter@v3
+      uses: dorny/paths-filter@v4
       with:
         filters: /tmp/simple-path-filters.yaml
     - name: Collect changes
