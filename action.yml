@@ -37,15 +37,48 @@ runs:
         ${{ github.action_path }}/scripts/simplify-filter-file.sh \
           ${{ inputs.filter-file }} \
           /tmp/simple-path-filters.yaml
+    # Determine workflow trigger
+    - name: Determine trigger type
+      id: trigger-check
+      shell: bash
+      run: |
+        REF_NAME="${{ github.ref }}"
+        BRANCH_NAME="${{ github.ref_name }}"
+        TAG_NAME=""
+
+        # Handle push events
+        if [[ "${{ github.event_name }}" == "push" ]]; then
+          if [[ "$REF_NAME" =~ ^refs/heads/release/[0-9]+\.[0-9]+$ ]]; then
+            echo "default_all=true" >> $GITHUB_OUTPUT
+          elif [[ "$REF_NAME" =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "default_all=true" >> $GITHUB_OUTPUT
+          else
+            echo "default_all=false" >> $GITHUB_OUTPUT
+          fi
+        # Handle workflow_dispatch events
+        elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          # Check if we're on a release branch
+          if [[ "$BRANCH_NAME" =~ ^release/[0-9]+\.[0-9]+$ ]]; then
+            echo "default_all=true" >> $GITHUB_OUTPUT
+          # Check if we're on a tag (less common for workflow_dispatch)
+          elif [[ "$REF_NAME" =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "default_all=true" >> $GITHUB_OUTPUT
+          else
+            echo "default_all=false" >> $GITHUB_OUTPUT
+          fi
+        # Other events (no idea what)
+        else
+          echo "default_all=false" >> $GITHUB_OUTPUT
+        fi
     # Collect changed paths
     - name: Collect changes
-      if: "${{ inputs.changes-override == '' }}"
+      if: "${{ steps.trigger-check.outputs.default_all == 'false' && inputs.changes-override == '' }}"
       id: filtered
       uses: dorny/paths-filter@v4
       with:
         filters: /tmp/simple-path-filters.yaml
     - name: Collect changes
-      if: "${{ inputs.changes-override == '_all_' }}"
+      if: "${{ steps.trigger-check.outputs.default_all == 'true' || inputs.changes-override == '_all_' }}"
       id: all
       shell: bash
       run: |
